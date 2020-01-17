@@ -6,7 +6,7 @@ import ShopPage from "./pages/shop/shop.component";
 import Header from "./components/header/header.component";
 import Access from "./pages/access/access.component";
 
-import { auth } from "./firebase/firebase.util";
+import { auth, createUserProfileDocument } from "./firebase/firebase.util";
 
 import "./App.css";
 
@@ -21,10 +21,22 @@ class App extends Component {
   unsubscribeFromAuth = null;
 
   componentDidMount() {
-    auth.onAuthStateChanged(user => {
-      this.setState({
-        currentUser: user
-      });
+    auth.onAuthStateChanged(async userAuth => {
+      if (userAuth) {
+        const userRef = await createUserProfileDocument(userAuth);
+        userRef.onSnapshot(snapShot => {
+          this.setState(
+            {
+              currentUser: {
+                id: snapShot.id,
+                ...snapShot.data()
+              }
+            },
+            () => console.log(this.state.currentUser)
+          );
+        });
+      }
+      this.setState({ currentUser: userAuth });
     });
   }
 
